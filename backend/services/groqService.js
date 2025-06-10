@@ -46,7 +46,6 @@ Follow this schema:
             {
               "title": "Task Title",
               "description": "Short summary of what to study/do",
-              "status": false,
               "resources": [
                 "https://example.com/resource1",
                 "https://example.com/resource2"
