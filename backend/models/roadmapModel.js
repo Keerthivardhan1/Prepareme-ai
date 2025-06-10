@@ -1,14 +1,9 @@
 import { generateRoadMap } from "../services/groqService";
 import { supabase } from "../services/supabaseClient";
-
-
 /*
-
 
 ToDo : 
     delete whole roadmap if it fails day or task or week to the database
-
-
 */
 
 export const createRoadmap = async ({userid , examName, examDate , Syllabus }) => {
