@@ -1,6 +1,7 @@
 import { Groq } from "groq-sdk";
 import Instructor from "@instructor-ai/instructor"; // npm install @instructor-ai/instructor
 import { z } from "zod"; // npm install zod
+import fs from 'fs';
 
 // Set up the client with Instructor
 const groq = new Groq();
@@ -59,6 +60,19 @@ Follow this schema:
 }
 `;
 
+
+
+
+async function saveRoadmapInLocalfile(data) {
+  try {
+    const jsonString = JSON.stringify(data, null, 2);
+    fs.writeFileSync('data.json', jsonString);
+  } catch (error) {
+    throw error
+  }
+}  
+
+
 export async function generateRoadMap({userInput}) {
   try {
     // Use instructor to create and validate in one step
@@ -74,7 +88,7 @@ export async function generateRoadMap({userInput}) {
       ],
       max_retries: 3,
     });
-
+    await saveRoadmapInLocalfile(roadmap)
     return roadmap;
   } catch (error) {
     console.error("Error:", error);

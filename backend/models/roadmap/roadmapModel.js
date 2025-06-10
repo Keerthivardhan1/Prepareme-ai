@@ -1,5 +1,7 @@
-import { generateRoadMap } from "../services/groqService";
-import { supabase } from "../services/supabaseClient";
+import { ModelError } from "../../Errors/modelErrors";
+import { generateRoadMap } from "../../services/groqService";
+import { supabase } from "../../services/supabaseClient";
+import { removeDaysByWeekId, removeRoadmap, removeTasksByDayId, removeWeeksByRoadMapId } from "./removeRoadmapModel";
 /*
 
 ToDo : 
@@ -9,6 +11,7 @@ ToDo :
 export const createRoadmap = async ({userid , examName, examDate , Syllabus }) => {
     
     const roadmap = await generateRoadMap({examName , examDate , Syllabus})
+
     const { roadmapData, roadmapError } = await supabase
         .from('roadmaps')
         .insert([{
@@ -20,8 +23,16 @@ export const createRoadmap = async ({userid , examName, examDate , Syllabus }) =
         userid :userid
         }]);
     
-    if(error){
-        throw error
+    if(roadmapError){
+        if(roadmapData && roadmapData.id ){
+            try {
+                await removeRoadmap(roadmapData.id)
+            } catch (error) {
+                throw new ModelError("roadmap created but unable to store" , error);
+                
+            }
+        }
+        throw new ModelError("unable to store roadmap " , error)
     }
 
     roadmap.weeks.map( async (weektasks , index) => {
@@ -29,14 +40,16 @@ export const createRoadmap = async ({userid , examName, examDate , Syllabus }) =
             .from('weeks')
             .insert([
                 {
-                    roadmap_id : roadmap.id,
+                    roadmap_id : roadmapData.id,
                     week_number : weekData.week_number,
                     progress : 0
                 }
             ])
 
         if(weekError){
-            throw weekError
+            await removeWeeksByRoadMapId(roadmapData.id)
+            await removeRoadmap(roadmapData.id)       
+            throw ModelError("roadmap created and stored but unable to store weeks " , weekError)
         }
 
             weektasks.days.map( async (daytasks , index ) => {
@@ -51,6 +64,9 @@ export const createRoadmap = async ({userid , examName, examDate , Syllabus }) =
                     ])
 
                 if(dayError){
+                    await removeDaysByWeekId(weekData.id)
+                    await removeWeeksByRoadMapId(roadmapData.id)
+                    await removeRoadmap(roadmapData.id)    
                     throw dayError
                 }
 
@@ -71,6 +87,10 @@ export const createRoadmap = async ({userid , examName, examDate , Syllabus }) =
 
 
                         if(taskError){
+                            await removeTasksByDayId(dayData.id)
+                            await removeDaysByWeekId(weekData.id)
+                            await removeWeeksByRoadMapId(roadmapData.id)
+                            await removeRoadmap(roadmapData.id)   
                             throw taskError
                         }
                     })

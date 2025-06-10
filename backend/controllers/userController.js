@@ -1,4 +1,5 @@
 import { createUser , getUserByEmail , getUserById } from "../models/userModel.js";
+import { sendEmail } from "../services/emailService.js";
 
 
 export const getUser = async (req , res)=>{
@@ -25,6 +26,7 @@ export const registerUser = async (req , res) => {
         }
 
         const newuser = await createUser({name , email , password , role})
+        await sendEmail(email , "Thanks for joining us" , 1 , {username :  name})
         res.status(201).json(newuser)
     } catch (err) {
         res.status(404).json({error : err.message})
